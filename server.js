@@ -1,10 +1,10 @@
 const   express = require("express"), app = express(),
         bodyParser = require("body-parser"),
-        uuid = require("uuid/v4"),
-        route = require("./routes/route"),
-        Sequelize = require('sequelize'),
+        // route = require("./routes/route"),
         db = require("./configs/db"),
-        User = require("./models/User");
+        User = require("./models/User"),
+        { ApolloServer } = require('apollo-server-express'),
+        { typeDefs, resolvers} = require("./schema");
 
 db.authenticate()
     .then(() => {
@@ -14,7 +14,10 @@ db.authenticate()
     })
     .catch(err => console.log("Error :" + err))
 
-
+const server = new ApolloServer({
+    typeDefs: typeDefs,
+    resolvers: resolvers
+});
 
 app.set("port", process.env.PORT || 2020); 
 
@@ -23,8 +26,9 @@ app .use(bodyParser.urlencoded({extended: true}))
     .use(bodyParser.json({ type: 'application/json'}))
     .use(require("./configs/cors")) 
 
-route(express, app);
+// route(express, app);
+server.applyMiddleware({ app });
 
-app.listen(app.get("port"), ()=>console.log(`Server listening on IP: 127.0.0.1:${app.get("port")}`));
+app.listen(app.get("port"), ()=>console.log(`Server listening on http://localhost:${app.get("port")}${server.graphqlPath}`));
 
 module.exports = app;
